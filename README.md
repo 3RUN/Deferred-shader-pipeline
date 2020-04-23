@@ -18,6 +18,5 @@ It doesn't support
 - Sunlight
 - Spotlights
 
-This pipeline originaly was created by José Miguel Rodríguez Chávarri, aka txesmi.
-It was refactored, tweaked and changed by (ME) Magomet Kochkarov, aka 3RUN.
-And statified by José Miguel Rodríguez Chávarri, aka txesmi.
+This pipeline originaly (back in 2012) was created by José Miguel Rodríguez Chávarri, aka txesmi.
+Then in 2020 it was refactored and tweaked by both of us (txesmi and me).
