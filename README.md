@@ -2,7 +2,7 @@
 
 This is a deferred pipeline that includes shadow mapping for pointlights.
 You can see it in motion on my YouTube channel:
-https://youtu.be/Uco-yQ7-TCc
+https://youtu.be/8dLz9Z62TRo
 
 It supports
 - Shadow mapping up to 8 dynamic lights
