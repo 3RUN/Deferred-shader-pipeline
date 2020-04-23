@@ -1,7 +1,5 @@
-// comment this to disable certain effects
-#define VERTEX_SNAPPING
-#define AFFINE_TEX_MAPPING
-#define POLY_CUTOFF
+
+#include "mtlGlobalSettings.fx"
 
 float4x4 matWorldViewProj;
 float4x4 matWorld;
@@ -10,7 +8,13 @@ float4 vecViewPos;
 float4 vecFog;
 float4 vecFogColor;
 
-float4 vecSkill1;
+#ifdef VERTEX_SNAPPING
+	float vertex_snapping_flt;
+#endif
+
+#ifdef POLY_CUTOFF
+	float cutoff_distance_flt;
+#endif
 
 texture entSkin1;
 texture entSkin2;
@@ -25,32 +29,34 @@ out float4 outPos: POSITION,
 out float4 outWorld: TEXCOORD0,
 out float4 outTex: TEXCOORD1 )
 {
-	// vertex snapping
-	#ifdef VERTEX_SNAPPING
-		float4 snapToPixel = mul(inPos, matWorldViewProj);
-		float4 vertex = snapToPixel;
-		vertex.xyz = snapToPixel.xyz / snapToPixel.w;
-		vertex.x = floor((vecSkill1.x + 40) * vertex.x) / (vecSkill1.x + 40); // default 160
-		vertex.y = floor(vecSkill1.x * vertex.y) / vecSkill1.x; // default 120
-		vertex.xyz *= snapToPixel.w;
-		outPos = vertex;
-		#else
-		outPos = mul(inPos, matWorldViewProj);
-	#endif
-	
-	// affine texture mapping
-	#ifdef AFFINE_TEX_MAPPING
-		outPos *= inPos.w / length(mul(inPos, matWorldViewProj));
-	#endif
-	
 	outWorld = mul( inPos, matWorld );
 	outTex.xy = inTex1.xy;
 	outTex.zw = inTex2.xy;
 	
+	float4 outPosTemp = mul(inPos, matWorldViewProj);
+	
+	// vertex snapping
+	#ifdef VERTEX_SNAPPING
+		float4 vertex;
+		vertex.xyz = outPosTemp.xyz / outPosTemp.w;
+		vertex.x = floor((vertex_snapping_flt + 40) * vertex.x) / (vertex_snapping_flt + 40); // default 160
+		vertex.y = floor(vertex_snapping_flt * vertex.y) / vertex_snapping_flt; // default 120
+		vertex.xyz *= outPosTemp.w;
+		vertex.w = outPosTemp.w;
+		outPos = vertex;
+	#else
+		outPos = outPosTemp;
+	#endif
+	
+	// affine texture mapping
+	#ifdef AFFINE_TEX_MAPPING
+		outPos *= inPos.w / length(outPosTemp);
+	#endif
+	
 	// cut out polygons
 	#ifdef POLY_CUTOFF
-		float distance = length(mul(inPos, matWorldViewProj));
-		if(distance > vecSkill1.y)
+		float distance = length(outPosTemp);
+		if(distance > cutoff_distance_flt)
 		{
 			outPos.w = 0;
 		}
@@ -91,6 +97,11 @@ technique
 {
 	pass p0
 	{
+		ZEnable = True;
+		ZWriteEnable = True;
+		AlphaBlendEnable = False;
+		AlphaTestEnable = False;
+		
 		VertexShader = compile vs_2_0 VS();
 		PixelShader  = compile ps_2_0 PS();
 	}

@@ -1,275 +1,478 @@
 
-void terrain_mtl_event()
+ENTITY *entSky = NULL;
+
+// lod factors
+float lod_0 = 0;
+float lod_1 = 0;
+float lod_2 = 0;
+float lod_3 = 0;
+
+// angles of cubemap render views
+var nCubemapAngles[6][2] = { 180, 0 , 90, 0, 0, 0, 270, 0, 90, -90, 90, 90 };
+
+// global bitmap pointers
+BMAP *bmpCamera      = "#2048x2048x24";
+BMAP *bmpWorld       = "#2048x2048x14444";
+BMAP *bmpAmbient     = "#2048x2048x24";
+BMAP *bmpTranslucent = "#2048x2048x24";
+BMAP *bmpSky         = SKYBOX_FILE;
+
+
+// light depth cubemaps
+BMAP *bmpDepthCubeEmpty = "#12x2x8";
+BMAP *bmpCubeMap1 = CUBEMAP_DESC;
+BMAP *bmpCubeMap2 = CUBEMAP_DESC;
+BMAP *bmpCubeMap3 = CUBEMAP_DESC;
+BMAP *bmpCubeMap4 = CUBEMAP_DESC;
+BMAP *bmpCubeMap5 = CUBEMAP_DESC;
+BMAP *bmpCubeMap6 = CUBEMAP_DESC;
+BMAP *bmpCubeMap7 = CUBEMAP_DESC;
+BMAP *bmpCubeMap8 = CUBEMAP_DESC;
+
+BMAP *bmpCubeMaps[8];
+void bmpCubeMaps_startup()
 {
-	int i;
-	for(i = 0; i < 16; i++)
-	{
-		matScales[i] = my->skill[i];
+	wait(1);
+	if(MAX_SHADOW_CASTER_LIGHTS > 0) {
+		bmpCubeMaps[0] = bmpCubeMap1;
+		bmap_to_cubemap(bmpCubeMap1);
 	}
-	mat_effect1 = matScales;
+	else
+	{
+		BMAP_SAFE_REMOVE(bmpCubeMap1);
+	}
+	
+	if(MAX_SHADOW_CASTER_LIGHTS > 1) {
+		bmpCubeMaps[1] = bmpCubeMap2;
+		bmap_to_cubemap(bmpCubeMap2);
+	}
+	else
+	{
+		BMAP_SAFE_REMOVE(bmpCubeMap2);
+	}
+	
+	if(MAX_SHADOW_CASTER_LIGHTS > 2) {
+		bmpCubeMaps[2] = bmpCubeMap3;
+		bmap_to_cubemap(bmpCubeMap3);
+	}
+	else
+	{
+		BMAP_SAFE_REMOVE(bmpCubeMap3);
+	}
+	
+	if(MAX_SHADOW_CASTER_LIGHTS > 3) {
+		bmpCubeMaps[3] = bmpCubeMap4;
+		bmap_to_cubemap(bmpCubeMap4);
+	}
+	else
+	{
+		BMAP_SAFE_REMOVE(bmpCubeMap4);
+	}
+	
+	if(MAX_SHADOW_CASTER_LIGHTS > 4) {
+		bmpCubeMaps[4] = bmpCubeMap5;
+		bmap_to_cubemap(bmpCubeMap5);
+	}
+	else
+	{
+		BMAP_SAFE_REMOVE(bmpCubeMap5);
+	}
+	
+	if(MAX_SHADOW_CASTER_LIGHTS > 5) {
+		bmpCubeMaps[5] = bmpCubeMap6;
+		bmap_to_cubemap(bmpCubeMap6);
+	}
+	else
+	{
+		BMAP_SAFE_REMOVE(bmpCubeMap6);
+	}
+	
+	if(MAX_SHADOW_CASTER_LIGHTS > 6) {
+		bmpCubeMaps[6] = bmpCubeMap7;
+		bmap_to_cubemap(bmpCubeMap7);
+	}
+	else
+	{
+		BMAP_SAFE_REMOVE(bmpCubeMap7);
+	}
+	
+	if(MAX_SHADOW_CASTER_LIGHTS > 7) {
+		bmpCubeMaps[7] = bmpCubeMap8;
+		bmap_to_cubemap(bmpCubeMap8);
+	}
+	else
+	{
+		BMAP_SAFE_REMOVE(bmpCubeMap8);
+	}
+	
+	
 }
+
+float nextLightCount;
+float nextLightPos[8][4];
+float nextLightColor[8][4];
+
+// renderers
+VIEW *camDummy = { flags = PROCESS_TARGET; }
+VIEW *camPostLight = { flags = PROCESS_TARGET; }
+
+VIEW *camLD01 = { flags = NULL; }
+VIEW *camLD02 = { flags = NULL; }
+VIEW *camLD03 = { flags = NULL; }
+VIEW *camLD04 = { flags = NULL; }
+VIEW *camLD05 = { flags = NULL; }
+VIEW *camLD06 = { flags = NULL; }
+VIEW *camLD11 = { flags = NULL; }
+VIEW *camLD12 = { flags = NULL; }
+VIEW *camLD13 = { flags = NULL; }
+VIEW *camLD14 = { flags = NULL; }
+VIEW *camLD15 = { flags = NULL; }
+VIEW *camLD16 = { flags = NULL; }
+VIEW *camLD21 = { flags = NULL; }
+VIEW *camLD22 = { flags = NULL; }
+VIEW *camLD23 = { flags = NULL; }
+VIEW *camLD24 = { flags = NULL; }
+VIEW *camLD25 = { flags = NULL; }
+VIEW *camLD26 = { flags = NULL; }
+VIEW *camLD31 = { flags = NULL; }
+VIEW *camLD32 = { flags = NULL; }
+VIEW *camLD33 = { flags = NULL; }
+VIEW *camLD34 = { flags = NULL; }
+VIEW *camLD35 = { flags = NULL; }
+VIEW *camLD36 = { flags = NULL; }
+VIEW *camLD41 = { flags = NULL; }
+VIEW *camLD42 = { flags = NULL; }
+VIEW *camLD43 = { flags = NULL; }
+VIEW *camLD44 = { flags = NULL; }
+VIEW *camLD45 = { flags = NULL; }
+VIEW *camLD46 = { flags = NULL; }
+VIEW *camLD51 = { flags = NULL; }
+VIEW *camLD52 = { flags = NULL; }
+VIEW *camLD53 = { flags = NULL; }
+VIEW *camLD54 = { flags = NULL; }
+VIEW *camLD55 = { flags = NULL; }
+VIEW *camLD56 = { flags = NULL; }
+VIEW *camLD61 = { flags = NULL; }
+VIEW *camLD62 = { flags = NULL; }
+VIEW *camLD63 = { flags = NULL; }
+VIEW *camLD64 = { flags = NULL; }
+VIEW *camLD65 = { flags = NULL; }
+VIEW *camLD66 = { flags = NULL; }
+VIEW *camLD71 = { flags = NULL; }
+VIEW *camLD72 = { flags = NULL; }
+VIEW *camLD73 = { flags = NULL; }
+VIEW *camLD74 = { flags = NULL; }
+VIEW *camLD75 = { flags = NULL; }
+VIEW *camLD76 = { flags = NULL; }
+
+VIEW *camLightDepth[8][6];
+
+void camLightDepth_startup()
+{
+	if(MAX_SHADOW_CASTER_LIGHTS > 0)
+	{
+		camLightDepth[0][0] = camLD01;
+		camLightDepth[0][1] = camLD02;
+		camLightDepth[0][2] = camLD03;
+		camLightDepth[0][3] = camLD04;
+		camLightDepth[0][4] = camLD05;
+		camLightDepth[0][5] = camLD06;
+	} 
+	else 
+	{
+		PTR_SAFE_REMOVE(camLD01);
+		PTR_SAFE_REMOVE(camLD02);
+		PTR_SAFE_REMOVE(camLD03);
+		PTR_SAFE_REMOVE(camLD04);
+		PTR_SAFE_REMOVE(camLD05);
+		PTR_SAFE_REMOVE(camLD06);
+	}
+	
+	if(MAX_SHADOW_CASTER_LIGHTS > 1)
+	{
+		camLightDepth[1][0] = camLD11;
+		camLightDepth[1][1] = camLD12;
+		camLightDepth[1][2] = camLD13;
+		camLightDepth[1][3] = camLD14;
+		camLightDepth[1][4] = camLD15;
+		camLightDepth[1][5] = camLD16;
+	} 
+	else 
+	{
+		PTR_SAFE_REMOVE(camLD11);
+		PTR_SAFE_REMOVE(camLD12);
+		PTR_SAFE_REMOVE(camLD13);
+		PTR_SAFE_REMOVE(camLD14);
+		PTR_SAFE_REMOVE(camLD15);
+		PTR_SAFE_REMOVE(camLD16);
+	}
+	
+	if(MAX_SHADOW_CASTER_LIGHTS > 2)
+	{
+		camLightDepth[2][0] = camLD21;
+		camLightDepth[2][1] = camLD22;
+		camLightDepth[2][2] = camLD23;
+		camLightDepth[2][3] = camLD24;
+		camLightDepth[2][4] = camLD25;
+		camLightDepth[2][5] = camLD26;
+	} 
+	else 
+	{
+		PTR_SAFE_REMOVE(camLD21);
+		PTR_SAFE_REMOVE(camLD22);
+		PTR_SAFE_REMOVE(camLD23);
+		PTR_SAFE_REMOVE(camLD24);
+		PTR_SAFE_REMOVE(camLD25);
+		PTR_SAFE_REMOVE(camLD26);
+	}
+		
+	if(MAX_SHADOW_CASTER_LIGHTS > 3)
+	{
+		camLightDepth[3][0] = camLD31;
+		camLightDepth[3][1] = camLD32;
+		camLightDepth[3][2] = camLD33;
+		camLightDepth[3][3] = camLD34;
+		camLightDepth[3][4] = camLD35;
+		camLightDepth[3][5] = camLD36;
+	} 
+	else 
+	{
+		PTR_SAFE_REMOVE(camLD31);
+		PTR_SAFE_REMOVE(camLD32);
+		PTR_SAFE_REMOVE(camLD33);
+		PTR_SAFE_REMOVE(camLD34);
+		PTR_SAFE_REMOVE(camLD35);
+		PTR_SAFE_REMOVE(camLD36);
+	}
+	
+	if(MAX_SHADOW_CASTER_LIGHTS > 4)
+	{
+		camLightDepth[4][0] = camLD41;
+		camLightDepth[4][1] = camLD42;
+		camLightDepth[4][2] = camLD43;
+		camLightDepth[4][3] = camLD44;
+		camLightDepth[4][4] = camLD45;
+		camLightDepth[4][5] = camLD46;
+	} 
+	else 
+	{
+		PTR_SAFE_REMOVE(camLD41);
+		PTR_SAFE_REMOVE(camLD42);
+		PTR_SAFE_REMOVE(camLD43);
+		PTR_SAFE_REMOVE(camLD44);
+		PTR_SAFE_REMOVE(camLD45);
+		PTR_SAFE_REMOVE(camLD46);
+	}
+	
+	if(MAX_SHADOW_CASTER_LIGHTS > 5)
+	{
+		camLightDepth[5][0] = camLD51;
+		camLightDepth[5][1] = camLD52;
+		camLightDepth[5][2] = camLD53;
+		camLightDepth[5][3] = camLD54;
+		camLightDepth[5][4] = camLD55;
+		camLightDepth[5][5] = camLD56;
+	} 
+	else 
+	{
+		PTR_SAFE_REMOVE(camLD51);
+		PTR_SAFE_REMOVE(camLD52);
+		PTR_SAFE_REMOVE(camLD53);
+		PTR_SAFE_REMOVE(camLD54);
+		PTR_SAFE_REMOVE(camLD55);
+		PTR_SAFE_REMOVE(camLD56);
+	}
+	
+	if(MAX_SHADOW_CASTER_LIGHTS > 6)
+	{
+		camLightDepth[6][0] = camLD61;
+		camLightDepth[6][1] = camLD62;
+		camLightDepth[6][2] = camLD63;
+		camLightDepth[6][3] = camLD64;
+		camLightDepth[6][4] = camLD65;
+		camLightDepth[6][5] = camLD66;
+	} 
+	else 
+	{
+		PTR_SAFE_REMOVE(camLD61);
+		PTR_SAFE_REMOVE(camLD62);
+		PTR_SAFE_REMOVE(camLD63);
+		PTR_SAFE_REMOVE(camLD64);
+		PTR_SAFE_REMOVE(camLD65);
+		PTR_SAFE_REMOVE(camLD66);
+	}
+	
+	if(MAX_SHADOW_CASTER_LIGHTS > 7)
+	{
+		camLightDepth[7][0] = camLD71;
+		camLightDepth[7][1] = camLD72;
+		camLightDepth[7][2] = camLD73;
+		camLightDepth[7][3] = camLD74;
+		camLightDepth[7][4] = camLD75;
+		camLightDepth[7][5] = camLD76;
+	} 
+	else 
+	{
+		PTR_SAFE_REMOVE(camLD71);
+		PTR_SAFE_REMOVE(camLD72);
+		PTR_SAFE_REMOVE(camLD73);
+		PTR_SAFE_REMOVE(camLD74);
+		PTR_SAFE_REMOVE(camLD75);
+		PTR_SAFE_REMOVE(camLD76);
+	}
+}
+
+// ------------------------------------------------------------------
+
+MATERIAL *mtlPostLight = {}
+
+MATERIAL *mtlDepth = {}
+MATERIAL *mtlDepthWaving = {}
+
+MATERIAL *mtlSky = {}
+
+void materials_startup() 
+{
+	wait(1);
+	effect_load(mtlDepth, "mtlDepth.fx");
+	effect_load(mtlDepthWaving, "mtlDepthWaving.fx");
+	
+	effect_load(mtlSky, "mtlSky.fx");
+}
+
+// ------------------------------------------------------------------
 
 void lightsource_mtl_event()
 {
+	LPD3DXEFFECT _fx = mtl->d3deffect;
+	_fx->SetFloat("fDLCount", nextLightCount);
+	_fx->SetVectorArray("vecDLPos", nextLightPos, 8);
+	_fx->SetVectorArray("vecDLColor", nextLightColor, 8);
+	
 	int i = 0, j = 0;
-	var light_num = view_to_light(camDummy, 1, NULL);
+	nextLightCount = view_to_light(camDummy, 1, NULL);
+	var shaded_num = minv(nextLightCount, MAX_SHADOW_CASTER_LIGHTS);
 
-	for(i = 0; i < light_num; i++)
+	for(i = 0; i < shaded_num; i += 1)
 	{
-		view_to_light(camDummy, i+1, NULL);
-		
-		if(hit->entity == NULL)
+		for(j = 0; j < 6; j += 1)
 		{
-			wait(1);
-			error("Every dynamic light has to be an entity");
-			sys_exit(NULL);
+			view_to_light(camLightDepth[i][j], i + 1, NULL);
+			camLightDepth[i][j]->bmap = bmpCubeMaps[i];
+			set(camLightDepth[i][j], SHOW);
 		}
-		else
+		nextLightPos[i][0] = hit->entity->x;
+		nextLightPos[i][1] = hit->entity->z;
+		nextLightPos[i][2] = hit->entity->y;
+		nextLightPos[i][3] = hit->entity->lightrange;
+		nextLightColor[i][0] = hit->entity->red / 255.0;
+		nextLightColor[i][1] = hit->entity->green / 255.0;
+		nextLightColor[i][2] = hit->entity->blue / 255.0;
+//		nextLightColor[i][3] = hit->entity->lightrange;
+	}
+	
+	for(i = shaded_num; i < MAX_SHADOW_CASTER_LIGHTS; i += 1)
+	{
+		for(j = 0; j < 6; j += 1)
 		{
-			switch(i)
-			{
-				case 0:
-				{
-					bmpCubeMap1 = (BMAP*)(hit->entity->OBJ_CUBEMAP);
-					break;
-				}
-				case 1:
-				{
-					bmpCubeMap2 = (BMAP*)(hit->entity->OBJ_CUBEMAP);
-					break;
-				}
-				case 2:
-				{
-					bmpCubeMap3 = (BMAP*)(hit->entity->OBJ_CUBEMAP);
-					break;
-				}
-				case 3:
-				{
-					bmpCubeMap4 = (BMAP*)(hit->entity->OBJ_CUBEMAP);
-					break;
-				}
-				case 4:
-				{
-					bmpCubeMap5 = (BMAP*)(hit->entity->OBJ_CUBEMAP);
-					break;
-				}
-				case 5:
-				{
-					bmpCubeMap6 = (BMAP*)(hit->entity->OBJ_CUBEMAP);
-					break;
-				}
-				case 6:
-				{
-					bmpCubeMap7 = (BMAP*)(hit->entity->OBJ_CUBEMAP);
-					break;
-				}
-				case 7:
-				{
-					bmpCubeMap8 = (BMAP*)(hit->entity->OBJ_CUBEMAP);
-					break;
-				}
-			}
-			
-			if(i < MAX_SHADOW_CASTER_LIGHTS)
-			{
-				for(j = 0; j < 6; j++)
-				{
-					view_to_light(camLightDepth[i][j], i+1, NULL);
-					camLightDepth[i][j]->bmap = (BMAP*)(hit->entity->OBJ_CUBEMAP);
-					set(camLightDepth[i][j], SHOW);
-				}
-			}
+			reset(camLightDepth[i][j], SHOW);
 		}
 	}
 	
-	for(i = light_num; i < 8; i++)
+	for(i = shaded_num; i < nextLightCount; i += 1)
 	{
-		if(i < MAX_SHADOW_CASTER_LIGHTS)
-		{
-			for(j = 0; j < 6; j++)
-			{
-				reset(camLightDepth[i][j], SHOW);
-			}
-		}
-		
-		switch(i)
-		{
-			case 0:
-			{
-				bmpCubeMap1 = bmpDepthCubeEmpty;
-				break;
-			}
-			case 1:
-			{
-				bmpCubeMap2 = bmpDepthCubeEmpty;
-				break;
-			}
-			case 2:
-			{
-				bmpCubeMap3 = bmpDepthCubeEmpty;
-				break;
-			}
-			case 3:
-			{
-				bmpCubeMap4 = bmpDepthCubeEmpty;
-				break;
-			}
-			case 4:
-			{
-				bmpCubeMap5 = bmpDepthCubeEmpty;
-				break;
-			}
-			case 5:
-			{
-				bmpCubeMap6 = bmpDepthCubeEmpty;
-				break;
-			}
-			case 6:
-			{
-				bmpCubeMap7 = bmpDepthCubeEmpty;
-				break;
-			}
-			case 7:
-			{
-				bmpCubeMap8 = bmpDepthCubeEmpty;
-				break;
-			}
-			default:
-			{
-				wait(1);
-				error("8 shadow caster dyn lights max!");
-				sys_exit(NULL);
-			}
-		}
+		view_to_light(camDummy, i + 1, NULL);
+		nextLightPos[i][0] = hit->entity->x;
+		nextLightPos[i][1] = hit->entity->z;
+		nextLightPos[i][2] = hit->entity->y;
+		nextLightPos[i][3] = hit->entity->lightrange;
+		nextLightColor[i][0] = hit->entity->red / 255.0;
+		nextLightColor[i][1] = hit->entity->green / 255.0;
+		nextLightColor[i][2] = hit->entity->blue / 255.0;
+//		nextLightColor[i][3] = hit->entity->lightrange;
 	}
 	
 	#ifdef DEBUG_PIPELINE
 		wait(1);
-		draw_text(str_printf(NULL, "Amount of visible lights: %d", (long)light_num), 10, 120, COLOR_WHITE);
+		draw_text(str_printf(NULL, "Amount of visible lights: %d", (long)nextLightCount), 10, 120, COLOR_WHITE);
+		draw_text(str_printf(NULL, "Amount of shadowed lights: %d", (long)shaded_num), 10, 140, COLOR_WHITE);
 	#endif
 }
 
-// create lightsource bmap for given entity
-void create_lightsource_bmap(ENTITY *ent)
+void pipeline_update()
 {
-	if(!ent)
-	{
-		diag("ERROR! Can't create bmap for given light! Entity doesn't exist!");
-		return;
-	}
+	int i;
 	
-	BMAP *bmpTemp = bmap_createblack(CUBEMAP_SIZE * 6, CUBEMAP_SIZE, 12);
-	ent->OBJ_CUBEMAP = (BMAP*)bmpTemp;
-	bmap_to_cubemap(bmpTemp);
+	// rebuilt light depth cubemaps
+	for(i = 0; i< MAX_SHADOW_CASTER_LIGHTS; i +=1)
+		bmap_to_cubemap(bmpCubeMaps[i]);
+	
+	// due to an engine bug it needs to reset main cameras rendering dX viewport on resolution changes
+	// the following code lines do the trick
+	bmap_rendertarget(bmpTranslucent, 0, 0); 
+	bmap_rendertarget(NULL, 0, 0);
 }
 
-// remove lightsource bmaps
-void remove_lightsource_bmaps_all()
+var engine_level_load(STRING *levelName);
+
+var pipeline_level_load(STRING *levelName)
 {
-	ENTITY *next = NULL;
-	for(next = ent_next(NULL); next; next = ent_next(next)) 
-	{
-		// no bmap skill set ?
-		if(!next->OBJ_CUBEMAP)
-		{
-			continue;
-		}
-		
-		// remove bmap
-		BMAP *bmpTemp = (BMAP*)next->OBJ_CUBEMAP;
-		ptr_remove(bmpTemp);
-		bmpTemp = NULL;
-		next->OBJ_CUBEMAP = NULL;
-	}
-	next = NULL;
+	PTR_SAFE_REMOVE(entSky);
+	
+	engine_level_load(levelName);
+	
+	entSky = ent_create(SPHERE_MDL, nullvector, NULL);
+	vec_fill(&entSky->scale_x, (camera->clip_far * 0.99) / entSky->max_x);
+	set(entSky, LIGHT | UNLIT | PASSABLE);
+	entSky->material = mtlSky;
 }
 
-// dirty way to update lightsource bmaps
-void update_lightsource_bmaps_all()
-{
-	ENTITY *next = NULL;
-	for(next = ent_next(NULL); next; next = ent_next(next)) 
-	{
-		// no bmap skill set ?
-		if(!next->OBJ_CUBEMAP)
-		{
-			continue;
-		}
-		
-		// remove bmap
-		BMAP *bmpTemp = (BMAP*)next->OBJ_CUBEMAP;
-		ptr_remove(bmpTemp);
-		bmpTemp = NULL;
-		next->OBJ_CUBEMAP = NULL;
-		
-		// create new one
-		bmpTemp = bmap_createblack(CUBEMAP_SIZE * 6, CUBEMAP_SIZE, 12);
-		next->OBJ_CUBEMAP = (BMAP*)bmpTemp;
-		bmap_to_cubemap(bmpTemp);
-	}
-	next = NULL;
-}
-
-void pipeline_create()
+void pipeline_startup()
 {
 	int i = 0, j = 0;
 	
-	if(!render_zbuffer)
+	// engines level_load function override
+	engine_level_load = level_load;
+	level_load = pipeline_level_load;
+	
+	light_view = camera;
+	//on_frame = lightsource_mtl_event;
+	
+	while(engine_status(0) != 5)
+		wait(1);
+	
+	// Resize engines depthstencil and backbuffer
+	if(render_zbuffer != NULL) 
 	{
-		bmap_zbuffer(bmap_createblack(maxv(screen_size.x, CUBEMAP_SIZE * 6), maxv(screen_size.y, CUBEMAP_SIZE), 32));
+		#ifdef DEBUG_PIPELINE
+			error("ZBuffer already exists!");
+		#endif		
+		PTR_SAFE_REMOVE(render_zbuffer);
 	}
-	else
-	{
-		error("zbuffer exists?");
-	}
+	bmap_zbuffer(bmap_createblack(maxv(2048, CUBEMAP_SIZE * 6), maxv(2048, CUBEMAP_SIZE), 32));
 	
-	// Create bmaps
-	bmpSky = bmap_create(SKYBOX_FILE);
-	bmap_to_cubemap(bmpSky);
-	
-	bmpDepthCubeEmpty = bmap_createblack(CUBEMAP_SIZE * 6, CUBEMAP_SIZE, 24);
-	
-	// Create render targets
-	bmpCamera = bmap_createblack(screen_size.x, screen_size.y, 24);
-	bmpWorld = bmap_createblack(screen_size.x, screen_size.y, 12222);
-	bmpAmbient = bmap_createblack(screen_size.x, screen_size.y, 12222);
-	bmpLightened = bmap_createblack(screen_size.x, screen_size.y, 24);
-	bmpTranslucent = bmap_createblack(screen_size.x, screen_size.y, 24);
-	
-	// Create materials
-	mtlPostBlur = mtl_create();
-	effect_load(mtlPostBlur, "ppScreen.fx");
-	
-	mtlPostLight = mtl_create();
+	// Config materials
 	mtlPostLight->skill1 = floatv(camera->clip_far);
 	mtlPostLight->event = lightsource_mtl_event;
 	mtlPostLight->flags = ENABLE_VIEW;
 	mtlPostLight->technique = "Diffuse";
 	effect_load(mtlPostLight, "ppLights.fx");
 	
+	bmap_to_cubemap(bmpSky);
 	mtlSky->skin1 = bmpSky;
-	mtlSky->skill1 = floatv(SKYBOX_FOG_FACTOR);
-	mtlSky->skill2 = floatv(vertex_snapping);
 	
-	mtlWaving->skill5 = floatd((camera->clip_far * 2) * d3d_lodfactor.x, 100);
-	mtlWaving->skill6 = floatd((camera->clip_far * 2) * (d3d_lodfactor.y - d3d_lodfactor.x), 100);
-	mtlWaving->skill7 = floatd((camera->clip_far * 2) * d3d_lodfactor.y, 100);
-	mtlWaving->skill8 = floatd((camera->clip_far * 2) * (d3d_lodfactor.z - d3d_lodfactor.y), 100);
+	lod_0 = (double)camera->clip_far * 2.0 * (double)d3d_lodfactor.x / 100.0;
+	lod_1 = (double)camera->clip_far * 2.0 * (double)(d3d_lodfactor.y - d3d_lodfactor.x) / 100.0;
+	lod_2 = (double)camera->clip_far * 2.0 * (double)d3d_lodfactor.y / 100.0;
+	lod_3 = (double)camera->clip_far * 2.0 * (double)(d3d_lodfactor.z - d3d_lodfactor.y) / 100.0;
 	
-	mtlDepth->skill1 = mtlWaving->skill1;
-	mtlDepth->skill2 = mtlWaving->skill2;
-	mtlDepth->skill3 = mtlWaving->skill3;
-	mtlDepth->skill4 = mtlWaving->skill4;
-	mtlDepth->skill5 = floatv(camera->x);
-	mtlDepth->skill6 = floatv(camera->z);
-	mtlDepth->skill7 = floatv(camera->y);
-	
+	while(engine_status(0) != 5)
+		wait(1);
 	// Create depth views
-	for(i = 0; i < MAX_SHADOW_CASTER_LIGHTS; i++)
+	for(i = 0; i < MAX_SHADOW_CASTER_LIGHTS; i += 1)
 	{
 		for(j = 0; j < 6; j++)
 		{
-			camLightDepth[i][j] = view_create(1);
 			camLightDepth[i][j]->arc = 90;
 			camLightDepth[i][j]->size_x = CUBEMAP_SIZE;
 			camLightDepth[i][j]->size_y = CUBEMAP_SIZE;
@@ -288,33 +491,27 @@ void pipeline_create()
 		}
 	}
 	
-	// create postprocessing views
-	camPostBlur = view_create(1);
-	camPostBlur->flags |= PROCESS_TARGET | SHOW | CHILD;
-	camPostBlur->material = mtlPostBlur;
-	
-	camPostLight = view_create(1);
-	camPostLight->flags |= PROCESS_TARGET | SHOW | CHILD;
-	camPostLight->material = mtlPostLight;
-	
 	// Set render targets
 	camera->bg = pixel_for_vec(nullvector, 1, 8888);
 	camera->bmap = bmpTranslucent;
 	camera->target1 = bmpCamera;
 	camera->target2 = bmpWorld;
 	camera->target3 = bmpAmbient;
-	camPostLight->bmap = bmpLightened;
+	camera->flags |= NOSKY;
+	if(camera->size_x == 0) {
+		camera->size_x = camPostLight->size_x = screen_size.x;
+		camera->size_y = camPostLight->size_y = screen_size.y;
+	}
 	
-	set(camera, NOSKY);
+	// create postprocessing views
+	camPostLight->material = mtlPostLight;
+	camPostLight->flags |= PROCESS_TARGET | SHOW | CHILD;
 	
 	// Link views
 	camera->stage = camPostLight;
-	camPostLight->stage = camPostBlur;
 	
-	entSky = ent_create(SPHERE_MDL, nullvector, NULL);
-	vec_fill(&entSky->scale_x, (camera->clip_far * 0.99) / entSky->max_x);
-	set(entSky, LIGHT | UNLIT | PASSABLE | CAST);
-	entSky->material = mtlSky;
+	// PSone visuals
+	cutoff_distance = camera->clip_far * 2;
 	
 	PipelineReady = 1;
 	
@@ -322,154 +519,45 @@ void pipeline_create()
 	{
 		proc_mode = PROC_LATE;
 		
-		vec_set(&entSky->x, &camera->x);
+		camPostLight->pos_x = camera->pos_x;
+		camPostLight->pos_y = camera->pos_y;
+		camPostLight->size_x = camera->size_x;
+		camPostLight->size_y = camera->size_y;
 		
-		mtlDepth->skill5 = floatv(camera->x);
-		mtlDepth->skill6 = floatv(camera->z);
-		mtlDepth->skill7 = floatv(camera->y);
-		
-		// PSone visuals
-		cutoff_distance = camera->clip_far * 2;
-		mtlBlock->skill1 = floatv(vertex_snapping);
-		mtlBlock->skill2 = floatv(cutoff_distance);
-		mtlEntity->skill1 = floatv(vertex_snapping);
-		mtlEntity->skill2 = floatv(cutoff_distance);
-		mtlWaving->skill1 = floatv(vertex_snapping);
-		mtlWaving->skill2 = floatv(cutoff_distance);
-		mtlBright->skill1 = floatv(vertex_snapping);
-		mtlBright->skill2 = floatv(cutoff_distance);
-		mtlTerrain->skill1 = floatv(vertex_snapping);
-		mtlTerrain->skill2 = floatv(cutoff_distance);
-		mtlSky->skill4 = floatv(vertex_snapping);
+		if(entSky != NULL) {
+			vec_set(&entSky->x, &camera->x);
+			vec_fill(&entSky->scale_x, (camera->clip_far * 0.99) / entSky->max_x);
+		}
 		
 		wait(1);
 	}
 }
 
-void pipeline_remove()
+void ent_set_as_solid(ENTITY *ent) 
 {
-	int i = 0, j = 0;
-	
-	if(render_zbuffer)
-	{
-		ptr_remove(render_zbuffer);
-		render_zbuffer = NULL;
-	}
-	
-	// Remove bmaps
-	if(bmpSky)
-	{
-		ptr_remove(bmpSky);
-		bmpSky = NULL;
-	}
-	
-	if(bmpDepthCubeEmpty)
-	{
-		ptr_remove(bmpDepthCubeEmpty);
-		bmpDepthCubeEmpty = NULL;
-	}
-	
-	// Remove render targets
-	if(bmpCamera)
-	{
-		ptr_remove(bmpCamera);
-		bmpCamera = NULL;
-	}
-	
-	if(bmpWorld)
-	{
-		ptr_remove(bmpWorld);
-		bmpWorld = NULL;
-	}
-	
-	if(bmpAmbient)
-	{
-		ptr_remove(bmpAmbient);
-		bmpAmbient = NULL;
-	}
-	
-	if(bmpLightened)
-	{
-		ptr_remove(bmpLightened);
-		bmpLightened = NULL;
-	}
-	
-	if(bmpTranslucent)
-	{
-		ptr_remove(bmpTranslucent);
-		bmpTranslucent = NULL;
-	}
-	
-	// Remove materials
-	if(mtlPostBlur)
-	{
-		ptr_remove(mtlPostBlur);
-		mtlPostBlur = NULL;
-	}
-	
-	if(mtlPostLight)
-	{
-		ptr_remove(mtlPostLight);
-		mtlPostLight = NULL;
-	}
-	
-	// Create depth views
-	for(i = 0; i < MAX_SHADOW_CASTER_LIGHTS; i++)
-	{
-		for(j = 0; j < 6; j++)
+	#ifdef DEBUG_PIPELINE
+		if(ent == NULL)
 		{
-			if(camLightDepth[i][j])
-			{
-				camLightDepth[i][j]->bmap = NULL;
-				ptr_remove(camLightDepth[i][j]);
-				camLightDepth[i][j] = NULL;
-			}
+			error("set_as_solid_ent parameter can't be NULL!");
+			return;
 		}
-	}
+	#endif
 	
-	// remove views
-	if(camPostBlur)
-	{
-		camPostBlur->bmap = NULL;
-		camPostBlur->stage = NULL;
-		ptr_remove(camPostBlur);
-		camPostBlur = NULL;
-	}
-	
-	if(camPostLight)
-	{
-		camPostLight->bmap = NULL;
-		camPostLight->stage = NULL;
-		ptr_remove(camPostLight);
-		camPostLight = NULL;
-	}
-	
-	// reset camera
-	camera->bmap = NULL;
-	camera->target1 = NULL;
-	camera->target2 = NULL;
-	camera->target3 = NULL;
-	
-	// unlink views
-	camera->stage = NULL;
-	
-	// remove sky
-	if(entSky)
-	{
-		ptr_remove(entSky);
-		entSky = NULL;
-	}
-	
-	PipelineReady = 0;
+	set(ent, SHADOW);
+	reset(ent, TRANSLUCENT | FLAG1);
 }
 
-void pipeline_update()
+void ent_set_as_translucent(ENTITY *ent)
 {
-	pipeline_remove();
-	wait_for(pipeline_remove);
+	#ifdef DEBUG_PIPELINE
+		if(ent == NULL)
+		{
+			error("set_as_translucent_ent parameter can't be NULL!");
+			return;
+		}
+	#endif
 	
-	update_lightsource_bmaps_all();
-	wait_for(update_lightsource_bmaps_all);
-	
-	pipeline_create();
+	reset(ent, SHADOW);
+	set(ent, TRANSLUCENT | FLAG1);
 }
+

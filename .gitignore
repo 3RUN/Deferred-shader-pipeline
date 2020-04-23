@@ -1,0 +1,25 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/MAIN1.SAV
+/mtlBlock.fxo
+/mtlDepth.fxo
+/mtlDepthWaving.fxo
+/mtlEntity.fxo
+/mtlSky.fxo
+/acklog.txt
+/mtlTerrain.fxo
+/mtlWaving.fxo
+/ppLights.fxo
+/ppScreen.fxo
+/scene.$$M
+/scene.$$w
+/scene.bak
+/scene.raw
+/scene.wed
+/fx/acklog.txt
+/.vs/Deferred-shader-pipeline/v15/Browse.VC.db
+/.vs/Deferred-shader-pipeline/v15/Browse.VC.opendb
+/.vs/ProjectSettings.json
+/.vs/slnx.sqlite
