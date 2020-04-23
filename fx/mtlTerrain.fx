@@ -1,8 +1,5 @@
 
-// comment this to disable certain effects
-#define VERTEX_SNAPPING
-#define AFFINE_TEX_MAPPING
-#define POLY_CUTOFF
+#include "mtlGlobalSettings.fx"
 
 float4x4 matWorldViewProj;
 float4x4 matWorld;
@@ -11,10 +8,16 @@ float4 vecViewPos;
 float4 vecFog;
 float4 vecFogColor;
 
-float4 vecSkill1;
-
 int iRepeat;
-float4x4 matEffect1;
+float4x4 matMtl;
+
+#ifdef VERTEX_SNAPPING
+	float vertex_snapping_flt;
+#endif
+
+#ifdef POLY_CUTOFF
+	float cutoff_distance_flt;
+#endif
 
 texture entSkin1;
 texture LightMap;
@@ -32,28 +35,30 @@ out float2 outTex: TEXCOORD1 )
 	outWorld = mul( inPos, matWorld );
 	outTex.xy = inTex1.xy;
 	
+	float4 outPosTemp = mul(inPos, matWorldViewProj);
+	
 	// vertex snapping
 	#ifdef VERTEX_SNAPPING
-		float4 snapToPixel = mul(inPos, matWorldViewProj);
-		float4 vertex = snapToPixel;
-		vertex.xyz = snapToPixel.xyz / snapToPixel.w;
-		vertex.x = floor((vecSkill1.x + 40) * vertex.x) / (vecSkill1.x + 40); // default 160
-		vertex.y = floor(vecSkill1.x * vertex.y) / vecSkill1.x; // default 120
-		vertex.xyz *= snapToPixel.w;
+		float4 vertex;
+		vertex.xyz = outPosTemp.xyz / outPosTemp.w;
+		vertex.x = floor((vertex_snapping_flt + 40) * vertex.x) / (vertex_snapping_flt + 40); // default 160
+		vertex.y = floor(vertex_snapping_flt * vertex.y) / vertex_snapping_flt; // default 120
+		vertex.xyz *= outPosTemp.w;
+		vertex.w = outPosTemp.w;
 		outPos = vertex;
-		#else
-		outPos = mul(inPos, matWorldViewProj);
+	#else
+		outPos = outPosTemp;
 	#endif
 	
 	// affine texture mapping
 	#ifdef AFFINE_TEX_MAPPING
-		outPos *= inPos.w / length(mul(inPos, matWorldViewProj));
+		outPos *= inPos.w / length(outPosTemp);
 	#endif
 	
 	// cut out polygons
 	#ifdef POLY_CUTOFF
-		float distance = length(mul(inPos, matWorldViewProj));
-		if(distance > vecSkill1.y)
+		float distance = length(outPosTemp);
+		if(distance > cutoff_distance_flt)
 		{
 			outPos.w = 0;
 		}
@@ -70,7 +75,7 @@ out float4 Color3 : COLOR3 ) : COLOR0
 {
 	float4 Shadow = tex2D ( ShadowSampler, inTex.xy );
 	float Alpha = tex2D ( TexSampler, inTex.xy ).a;
-	float3 Tex = tex2D ( TexSampler, inTex.xy * matEffect1[iRepeat/4][iRepeat%4] ).rgb;
+	float3 Tex = tex2D ( TexSampler, inTex.xy * matMtl[iRepeat/4][iRepeat%4] ).rgb;
 	
 	float4 Color0;
 	Color0.rgb = 0;
