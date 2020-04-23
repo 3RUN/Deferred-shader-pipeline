@@ -19,4 +19,4 @@ It doesn't support
 - Spotlights
 
 This pipeline originaly (back in 2012) was created by José Miguel Rodríguez Chávarri, aka txesmi.
-Then in 2020 it was refactored and tweaked by both of us (txesmi and me).
+In 2020 it was refactored and tweaked by both of us (txesmi and me).
