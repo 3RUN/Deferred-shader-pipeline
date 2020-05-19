@@ -18,5 +18,9 @@ It doesn't support
 - Sunlight
 - Spotlights
 
+Bugs:
+- Weird artifacts on fullscreen toggle or on fullscreen minimize/maximize
+- Weird artifacts on some resolutions (in fullscreen mode)
+
 This pipeline originaly (back in 2012) was created by José Miguel Rodríguez Chávarri, aka txesmi.
 In 2020 it was refactored and tweaked by both of us (txesmi and me).
